@@ -31,6 +31,7 @@ contract MyNFT is ERC721URIStorage{
         nounce = nounce + 1;
         return nounce;
     }
+    
 
 
 
