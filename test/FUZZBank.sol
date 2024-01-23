@@ -35,12 +35,13 @@ contract Fuzz_bank_test is Test{
                 vm.assume(amount > 0);
                 vm.startPrank(user);{
                     if (amount <= 0.001 ether){
-                        /*
+                                                bytes memory wantErr = abi.encodeWithSelector(BigBank.AmountNotEnough.selector,amount); 
+
+                         vm.expectRevert(wantErr);
                         (bool success,) = address(bigbank).call{value:amount}("");
-                        bytes memory wantErr = abi.encodeWithSelector(BigBank.AmountNotEnough.selector,amount); 
                         console.logBytes(wantErr);
                         vm.expectRevert(wantErr);
-                        */
+                        
                         console.log("haha");
                         return;
                     }
