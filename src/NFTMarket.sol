@@ -60,7 +60,7 @@ contract NFTMarket {
 
     //用户上架出售nft
     function sellNFTs(uint256 tokenID, uint256 amount) public OnlyOwner(tokenID) {
-        IERC721(nftAddr).approve(address(this), tokenID);
+        //IERC721(nftAddr).approve(address(this), tokenID);
         price[tokenID] = amount;
         isListed[tokenID] = true;
         emit ListSuccess(tokenID, amount);
