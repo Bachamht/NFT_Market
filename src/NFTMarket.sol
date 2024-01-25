@@ -16,6 +16,9 @@ interface IERC721 {
 contract NFTMarket {
 
     using SafeERC20 for IERC20;
+    address private marketOwner;
+    address private nftAddr;
+    address private tokenPool; 
 
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);
@@ -23,12 +26,11 @@ contract NFTMarket {
     error MoneyNotEnough(uint amount);
     error NotOwner(address msgSender, uint tokenID);
     error NotSelling(uint256 tokenID);
+    error NotMarketOwner(address sender);
 
     mapping(uint256 => uint256) price;
     mapping(uint256 => bool) isListed;
 
-    address private nftAddr;
-    address private tokenPool; 
 
     constructor(address NftAddr, address TokenPool) {
         nftAddr = NftAddr;
@@ -43,6 +45,12 @@ contract NFTMarket {
     modifier OnlyOwner(uint256 tokenID){
         address nftOwner = IERC721(nftAddr).ownerOf(tokenID);
         if (msg.sender != nftOwner) revert NotOwner(msg.sender, tokenID);
+        _;
+    }
+
+    
+    modifier OnlyMarketOwner(){
+        if (msg.sender != marketOwner) revert NotMarketOwner(msg.sender);
         _;
     }
 
@@ -111,4 +119,19 @@ contract NFTMarket {
         }
         return  number;
     }
+
+    //白名单购买NFT
+    function WhitelistBuy(address nft, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public {
+        require(permit(nft, tokenId, v, r, s), "No Permission");
+    }
+
+   //使用Slot模式读取和修改Owner地址
+   function modifyOwner(address ownerChange) public OnlyMarketOwner{
+        assembly{
+            sstore(0, ownerChange)
+        }
+   }
+
+
+    
 }

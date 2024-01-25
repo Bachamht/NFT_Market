@@ -3,14 +3,23 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/token/ERC20/extensions/ERC20Permit.sol";
+
+/*
+
+• 使用 EIP2612 标准 Token , 使用签名的方式 deposite
+
+• 离线授权的白名单地址才可购买 NFT
+
+*/
 
 interface ItokenRecieved {
      function tokensRecieved(address from, address to, uint amount, bytes memory data) external; 
 } 
 
-contract btcToken is ERC20{
+contract btcToken is ERC20Permit{
     
-    constructor() ERC20("bitcoin", "BTC"){
+    constructor() ERC20("bitcoin", "BTC") ERC20Permit("ERC2612"){
          owner = msg.sender;
     }
 
@@ -30,14 +39,20 @@ contract btcToken is ERC20{
         emit MintSuccess(receiver, amount);
    }
    
-     
+
    function tokenTransferWithCallback(address to, uint amount, bytes memory data) public{
         _transfer(msg.sender, to, amount);
         ItokenRecieved(to).tokensRecieved(msg.sender, to, amount, data);
         emit transferSuccess(msg.sender, to, amount);
    }
 
-   
-
+    function permitWhitelist( address nft, uint256 tokenId, uint8 v, bytes32 r, bytes32 s)  public returns (bool) {
+        bytes32 structHash = keccak256(
+            abi.encode(PERMIT_TYPEHASH, nft, tokenId, msg.sender, _useNonce(msg.sender))
+        );
+        bytes32 hash = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(hash, v, r, s);
+        return signer == _owner;
+    }
 
 }
