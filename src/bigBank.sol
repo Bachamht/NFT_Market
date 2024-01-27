@@ -15,9 +15,6 @@ contract BigBank is Bank {
         _;
     }
 
-
-
-
   
     //用户存款
     function deposit() internal amountCheck(msg.value) override {

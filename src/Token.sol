@@ -46,13 +46,6 @@ contract btcToken is ERC20Permit{
         emit transferSuccess(msg.sender, to, amount);
    }
 
-    function permitWhitelist( address nft, uint256 tokenId, uint8 v, bytes32 r, bytes32 s)  public returns (bool) {
-        bytes32 structHash = keccak256(
-            abi.encode(PERMIT_TYPEHASH, nft, tokenId, msg.sender, _useNonce(msg.sender))
-        );
-        bytes32 hash = _hashTypedDataV4(structHash);
-        address signer = ECDSA.recover(hash, v, r, s);
-        return signer == _owner;
-    }
+ 
 
 }

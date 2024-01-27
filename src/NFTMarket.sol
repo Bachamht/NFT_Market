@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 
 
 interface IERC721 {
@@ -16,9 +18,17 @@ interface IERC721 {
 contract NFTMarket {
 
     using SafeERC20 for IERC20;
+    using ECDSA for bytes32;
+
     address private marketOwner;
     address private nftAddr;
-    address private tokenPool; 
+    address private tokenPool;
+    address private signer; 
+
+    bytes32 private constant BuyNFT_TYPEHASH = keccak256("BuyNFT(address buyer,uint256 tokenID)");
+    bytes32 private constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 private DOMAIN_SEPARATOR;
+
 
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);
@@ -35,6 +45,15 @@ contract NFTMarket {
     constructor(address NftAddr, address TokenPool) {
         nftAddr = NftAddr;
         tokenPool = TokenPool;
+        signer = msg.sender;
+        marketOwner = msg.sender;
+        DOMAIN_SEPARATOR = keccak256(abi.encode(
+            EIP712DOMAIN_TYPEHASH, // type hash
+            keccak256(bytes("EIP712Storage")), // name
+            keccak256(bytes("1")), // version
+            block.chainid, // chain id
+            address(this) // contract address
+        ));
     }
 
     modifier NotEnough(uint256 amount, uint256 tokenID) {
@@ -111,6 +130,47 @@ contract NFTMarket {
             emit BuySuccess(msg.sender, tokenID);
         }
     
+    
+
+    //白名单购买NFT
+    function WhitelistBuy(uint256 tokenId, uint amount, bytes memory _signature) public {
+        require(permit(nft, tokenId, _signature), "No Permission");
+        address seller = IERC721(nftAddr).ownerOf(tokenID);
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
+        IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
+        emit BuySuccess(msg.sender, tokenID);
+    }
+
+    //验签
+    function permit(uint256 tokenID, bytes memory _signature) internal reutrns(bool){
+        require(_signature.length == 65, "invalid signature length");
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 0x20))
+            s := mload(add(_signature, 0x40))
+            v := byte(0, mload(add(_signature, 0x60)))
+        }
+
+        bytes32 _msgHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            DOMAIN_SEPARATOR,
+            keccak256(abi.encode(BuyNFT_TYPEHASH, msg.sender, tokenID))
+        )); 
+        
+        retrun (signer == _msgHash.recover(v, r, s));
+
+    }
+
+
+   //使用Slot模式读取和修改Owner地址
+   function modifyOwner(address ownerChange) public OnlyMarketOwner{
+        assembly{
+            sstore(0, ownerChange)
+        }
+   }
+    
     //bytes to uint256
     function bytesToUint(bytes memory b) internal returns (uint256){
         uint256 number;
@@ -119,19 +179,4 @@ contract NFTMarket {
         }
         return  number;
     }
-
-    //白名单购买NFT
-    function WhitelistBuy(address nft, uint256 tokenId, uint8 v, bytes32 r, bytes32 s) public {
-        require(permit(nft, tokenId, v, r, s), "No Permission");
-    }
-
-   //使用Slot模式读取和修改Owner地址
-   function modifyOwner(address ownerChange) public OnlyMarketOwner{
-        assembly{
-            sstore(0, ownerChange)
-        }
-   }
-
-
-    
 }
