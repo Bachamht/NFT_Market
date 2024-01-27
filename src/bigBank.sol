@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/token/ERC20/extensions/IERC20Permit.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import './bank.sol';
 contract BigBank is Bank {
     
@@ -41,11 +41,14 @@ contract BigBank is Bank {
         return balances[who];
     }
     
-   
+   /*
     function permitDeposit(address user, uint amount, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
         IERC20Permit(token).permit(msg.sender, address(this), amount, deadline, v, r, s);
         IERC20(token).transferFrom(msg.sender, address(this), amount);
         balances[user] += amount;   
     }
+    */
+
+    
 
 }

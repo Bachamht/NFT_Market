@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ECDSA} from "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
 
 
@@ -133,16 +133,16 @@ contract NFTMarket {
     
 
     //白名单购买NFT
-    function WhitelistBuy(uint256 tokenId, uint amount, bytes memory _signature) public {
-        require(permit(nft, tokenId, _signature), "No Permission");
-        address seller = IERC721(nftAddr).ownerOf(tokenID);
-        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
-        IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
-        emit BuySuccess(msg.sender, tokenID);
+    function WhitelistBuy(uint256 tokenID, uint amount, bytes memory _signature) public {
+        require(permit(tokenID, _signature), "No Permission");
+         address seller = IERC721(nftAddr).ownerOf(tokenID);
+         IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
+         IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
+         emit BuySuccess(msg.sender, tokenID);
     }
 
     //验签
-    function permit(uint256 tokenID, bytes memory _signature) internal reutrns(bool){
+    function permit(uint256 tokenID, bytes memory _signature) internal returns(bool){
         require(_signature.length == 65, "invalid signature length");
         bytes32 r;
         bytes32 s;
@@ -159,7 +159,7 @@ contract NFTMarket {
             keccak256(abi.encode(BuyNFT_TYPEHASH, msg.sender, tokenID))
         )); 
         
-        retrun (signer == _msgHash.recover(v, r, s));
+        return (signer == _msgHash.recover(v, r, s));
 
     }
 
