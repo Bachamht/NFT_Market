@@ -22,6 +22,7 @@ import {
   log_uint as log_uintEvent,
   logs as logsEvent
 } from "../generated/NFT_Market/NFT_Market"
+import {Bytes} from "@graphprotocol/graph-ts";
 import {
   log,
   log_address,
@@ -101,7 +102,7 @@ export function handlelog_array2(event: log_array2Event): void {
   let entity = new log_array2(
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
-  entity.val = event.params.val
+  entity.val =  changetype<Bytes[]>(event.params.val)
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp
@@ -196,7 +197,7 @@ export function handlelog_named_array2(event: log_named_array2Event): void {
     event.transaction.hash.concatI32(event.logIndex.toI32())
   )
   entity.key = event.params.key
-  entity.val = event.params.val
+  entity.val =  changetype<Bytes[]>(event.params.val)
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp

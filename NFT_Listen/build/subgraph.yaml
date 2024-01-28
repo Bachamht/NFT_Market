@@ -1,0 +1,89 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: NFT_Market
+    network: sepolia
+    source:
+      address: "0xdE66D119227e5E2E201e1e83777D42AA1922631D"
+      abi: NFT_Market
+      startBlock: 5169389
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - log
+        - log_address
+        - log_array
+        - log_array1
+        - log_array2
+        - log_bytes
+        - log_bytes32
+        - log_int
+        - log_named_address
+        - log_named_array
+        - log_named_array1
+        - log_named_array2
+        - log_named_bytes
+        - log_named_bytes32
+        - log_named_decimal_int
+        - log_named_decimal_uint
+        - log_named_int
+        - log_named_string
+        - log_named_uint
+        - log_string
+        - log_uint
+        - logs
+      abis:
+        - name: NFT_Market
+          file: NFT_Market/abis/NFT_Market.json
+      eventHandlers:
+        - event: log(string)
+          handler: handlelog
+        - event: log_address(address)
+          handler: handlelog_address
+        - event: log_array(uint256[])
+          handler: handlelog_array
+        - event: log_array(int256[])
+          handler: handlelog_array1
+        - event: log_array(address[])
+          handler: handlelog_array2
+        - event: log_bytes(bytes)
+          handler: handlelog_bytes
+        - event: log_bytes32(bytes32)
+          handler: handlelog_bytes32
+        - event: log_int(int256)
+          handler: handlelog_int
+        - event: log_named_address(string,address)
+          handler: handlelog_named_address
+        - event: log_named_array(string,uint256[])
+          handler: handlelog_named_array
+        - event: log_named_array(string,int256[])
+          handler: handlelog_named_array1
+        - event: log_named_array(string,address[])
+          handler: handlelog_named_array2
+        - event: log_named_bytes(string,bytes)
+          handler: handlelog_named_bytes
+        - event: log_named_bytes32(string,bytes32)
+          handler: handlelog_named_bytes32
+        - event: log_named_decimal_int(string,int256,uint256)
+          handler: handlelog_named_decimal_int
+        - event: log_named_decimal_uint(string,uint256,uint256)
+          handler: handlelog_named_decimal_uint
+        - event: log_named_int(string,int256)
+          handler: handlelog_named_int
+        - event: log_named_string(string,string)
+          handler: handlelog_named_string
+        - event: log_named_uint(string,uint256)
+          handler: handlelog_named_uint
+        - event: log_string(string)
+          handler: handlelog_string
+        - event: log_uint(uint256)
+          handler: handlelog_uint
+        - event: logs(bytes)
+          handler: handlelogs
+      file: NFT_Market/NFT_Market.wasm
