@@ -1,0 +1,188 @@
+type log @entity(immutable: true) {
+  id: Bytes!
+  param0: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_address @entity(immutable: true) {
+  id: Bytes!
+  param0: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_array @entity(immutable: true) {
+  id: Bytes!
+  val: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_array1 @entity(immutable: true) {
+  id: Bytes!
+  val: [BigInt!]! # int256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_array2 @entity(immutable: true) {
+  id: Bytes!
+  val: [Bytes!]! # address[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_bytes @entity(immutable: true) {
+  id: Bytes!
+  param0: Bytes! # bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_bytes32 @entity(immutable: true) {
+  id: Bytes!
+  param0: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_int @entity(immutable: true) {
+  id: Bytes!
+  param0: BigInt! # int256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_address @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_array @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: [BigInt!]! # uint256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_array1 @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: [BigInt!]! # int256[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_array2 @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: [Bytes!]! # address[]
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_bytes @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: Bytes! # bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_bytes32 @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: Bytes! # bytes32
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_decimal_int @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: BigInt! # int256
+  decimals: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_decimal_uint @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: BigInt! # uint256
+  decimals: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_int @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: BigInt! # int256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_string @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_named_uint @entity(immutable: true) {
+  id: Bytes!
+  key: String! # string
+  val: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_string @entity(immutable: true) {
+  id: Bytes!
+  param0: String! # string
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type log_uint @entity(immutable: true) {
+  id: Bytes!
+  param0: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type logs @entity(immutable: true) {
+  id: Bytes!
+  param0: Bytes! # bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
