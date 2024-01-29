@@ -19,14 +19,18 @@ contract MyNFT is ERC721URIStorage{
         administrator = msg.sender;
     }
     
-    //铸造nft
+    /**
+     * mint NFT
+     */
     function mint(address to, string memory tokenURI) public onlyAdministrator{
         uint256 tokenID = tokenId();
         _safeMint(to, tokenID);
         _setTokenURI(tokenID, tokenURI);
     }
-    
-    //tokenID 每次自增1
+
+    /**
+     * tokenID increases by 1 each time
+     */
     function tokenId() internal returns (uint) {
         nounce = nounce + 1;
         return nounce;

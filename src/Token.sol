@@ -5,14 +5,6 @@ pragma solidity ^0.8.0;
 import "lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
-/*
-
-• 使用 EIP2612 标准 Token , 使用签名的方式 deposite
-
-• 离线授权的白名单地址才可购买 NFT
-
-*/
-
 interface ItokenRecieved {
      function tokensRecieved(address from, address to, uint amount, bytes memory data) external; 
 } 
@@ -33,13 +25,17 @@ contract btcToken is ERC20Permit{
         _;
     }
 
-   //铸造代币给对应用户
+   /**
+     * Mint tokens to corresponding users
+     */  
    function distributeTokens(address receiver, uint amount) public onlyOwner{
         _mint(receiver, amount);
         emit MintSuccess(receiver, amount);
    }
    
-
+   /**
+     * Directly transfer the token to an address and have a corresponding return function for processing.
+     */  
    function tokenTransferWithCallback(address to, uint amount, bytes memory data) public{
         _transfer(msg.sender, to, amount);
         ItokenRecieved(to).tokensRecieved(msg.sender, to, amount, data);

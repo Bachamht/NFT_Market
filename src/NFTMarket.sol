@@ -12,7 +12,6 @@ interface IERC721 {
         function transferFrom(address from, address to, uint256 tokenId) external;
         function ownerOf(uint256 tokenId) external returns(address);
         function approve(address to, uint256 tokenId) external;
-
 }
 
 contract NFTMarket {
@@ -30,7 +29,6 @@ contract NFTMarket {
     bytes32 private constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 private DOMAIN_SEPARATOR;
 
-
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);
 
@@ -41,7 +39,6 @@ contract NFTMarket {
 
     mapping(uint256 => uint256) price;
     mapping(uint256 => bool) isListed;
-
 
     constructor(address NftAddr, address TokenPool) {
         nftAddr = NftAddr;
@@ -68,13 +65,11 @@ contract NFTMarket {
         _;
     }
 
-    
     modifier OnlyMarketOwner(){
         if (msg.sender != marketOwner) revert NotMarketOwner(msg.sender);
         _;
     }
 
-    //判断该nft是否在售
     modifier isOnSelling(bytes memory data){
         uint256 tokenID = bytesToUint(data);
         if (isListed[tokenID] == false) revert NotSelling(tokenID);
@@ -86,7 +81,9 @@ contract NFTMarket {
         _;
     }
 
-    //用户上架出售nft
+    /**
+     * User lists nft for sale
+     */
     function sellNFTs(uint256 tokenID, uint256 amount) public OnlyOwner(tokenID) {
         //IERC721(nftAddr).approve(address(this), tokenID);
         price[tokenID] = amount;
@@ -95,12 +92,18 @@ contract NFTMarket {
 
     }
     
-    //用户下架nft
+    /**
+     * User removes nft
+     */
     function removeNFT(uint tokenID) public OnlyOwner(tokenID) {
         isListed[tokenID] = false;
     }
 
-    //用户买nft
+    /**
+     * User buy nft
+     * The seller needs to approve the nft to the market 
+     * The buyer needs to approve the tokens to the market
+     */
     function buyNFT(uint256 tokenID, uint256 amount) public isOnSelling2(tokenID) NotEnough(amount, tokenID) {
        
         address seller = IERC721(nftAddr).ownerOf(tokenID);
@@ -110,30 +113,36 @@ contract NFTMarket {
 
     }
 
-    //买家查看nft价格
+    /**
+     * View NFT's price
+     */
     function viewPrice(uint256 tokenID) public view returns(uint256){
         return price[tokenID];
     }
 
-
-    //用户查询nft的主人
+    /**
+     * View NFT's owner
+     */
     function viewOwner(uint256 tokenID) public returns(address) {
         return IERC721(nftAddr).ownerOf(tokenID);
     }
 
-    //对用户直接转进地址的代币进行处理
+    /**
+     * A callback function corresponding to the tokenTransferWithCallback() function in the token contract
+     * This is used for users to directly transfer tokens to purchase NFT, eliminating the need for users to approve tokens
+     */
     function tokensRecieved(address from, address to, uint amount, bytes memory data) external isOnSelling(data) {
-            
-            uint256 tokenID = bytesToUint(data);
-            address seller = IERC721(nftAddr).ownerOf(tokenID);
-            IERC721(nftAddr).transferFrom(seller, from, tokenID);
-            IERC20(tokenPool).transfer(seller, amount);
-            emit BuySuccess(msg.sender, tokenID);
-        }
+        uint256 tokenID = bytesToUint(data);
+        address seller = IERC721(nftAddr).ownerOf(tokenID);
+        IERC721(nftAddr).transferFrom(seller, from, tokenID);
+        IERC20(tokenPool).transfer(seller, amount);
+        emit BuySuccess(msg.sender, tokenID);
+    }
     
-    
-
-    //白名单购买NFT
+    /**
+     * whitelist mode
+     * Only users with signatures issued by the project party can purchase the corresponding NFT
+     */
     function WhitelistBuy(uint256 tokenID, uint amount, bytes memory _signature) public {
         require(permitWhitelist(tokenID, _signature), "No Permission");
          address seller = IERC721(nftAddr).ownerOf(tokenID);
@@ -142,7 +151,9 @@ contract NFTMarket {
          emit BuySuccess(msg.sender, tokenID);
     }
 
-    //验签(白名单)
+    /**
+     * Verify whitelist signature
+     */
     function permitWhitelist(uint256 tokenID, bytes memory _signature) internal returns(bool) {
         require(_signature.length == 65, "invalid signature length");
         (bytes32 r, bytes32 s, uint8 v) = decondeSignature(_signature);
@@ -156,7 +167,10 @@ contract NFTMarket {
 
     }
 
-   //带着卖家离线签名购买NFT(免除上架操作)
+   /**
+     * Sellers do not need to list NFT
+     * Buyers can directly purchase NFTs with the signature of the seller
+     */
    function buyWithSignature(uint256 tokenID, uint amount, bytes memory _signature) public {
         require(permitSignature(tokenID, amount,  _signature), "No Permission");
         address seller = IERC721(nftAddr).ownerOf(tokenID);
@@ -165,7 +179,9 @@ contract NFTMarket {
         emit BuySuccess(msg.sender, tokenID);
    }
 
-   //验签（买家直接带卖家签名前来购买）
+   /**
+     * Verify signature issued by seller
+     */
     function permitSignature(uint256 tokenID, uint amount, bytes memory _signature) internal returns(bool) {
         require(_signature.length == 65, "invalid signature length");
         bytes32 _msgHash = keccak256(abi.encodePacked(
@@ -176,18 +192,22 @@ contract NFTMarket {
         
         address owner = viewOwner(tokenID);
         return ( owner == _msgHash.recover(v, r, s));
-        
+
     }
 
 
-   //使用Slot模式读取和修改Owner地址
+   /**
+     * Modify the owner by modifying the slot
+     */
    function modifyOwner(address ownerChange) public OnlyMarketOwner{
         assembly{
             sstore(0, ownerChange)
         }
    }
     
-    //decode signature
+    /**
+     * decode signature
+     */
     function decondeSignature(bytes memory _signature) internal returns(bytes32, bytes32, uint8) {
 
         bytes32 r;
@@ -202,8 +222,9 @@ contract NFTMarket {
 
     }
 
-
-    //bytes to uint256
+    /**
+     * bytes to uint256
+     */
     function bytesToUint(bytes memory b) internal returns (uint256){
         uint256 number;
         for(uint i= 0; i<b.length; i++){

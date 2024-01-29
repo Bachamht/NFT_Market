@@ -16,12 +16,16 @@ contract BigBank is Bank {
     }
 
   
-    //用户存款
+    /**
+     * user deposit
+     */
     function deposit() internal amountCheck(msg.value) override {
         balances[msg.sender] += msg.value;
     }
 
-    //向合约授予管理员权限
+    /**
+     * Set up an administrator for the contract
+     */
     function grantPermission(address Ownable) public onlyOwner{
         if(isContract(Ownable) == false) {
             revert NotContractAddress(Ownable);
@@ -29,14 +33,18 @@ contract BigBank is Bank {
         administrator = Ownable;
     }
     
-    //合约地址与外部地址判断
+    /**
+     * Contract address and external address judgment
+     */
     function isContract(address addr) internal view returns (bool) {
         uint256 size;
         assembly { size := extcodesize(addr) }
          return size > 0;
     }
     
-    //查看余额
+    /**
+     * view balance
+     */
     function balanceOf(address who) public returns(uint256){
         return balances[who];
     }

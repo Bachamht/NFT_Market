@@ -14,8 +14,8 @@ contract Bank is  IWithdraw{
 
     address internal owner;
     address internal administrator;
-    mapping(address => uint) internal balances;
     address [3] private topThree;
+    mapping(address => uint) internal balances;
 
     error BalanceIsNotEnough(uint);
     
@@ -30,12 +30,13 @@ contract Bank is  IWithdraw{
         _;
     }
 
-    
     receive() external payable { 
         deposit();
     }
 
-    //用户存款
+     /**
+     * user deposit
+     */
     function deposit() virtual internal {
         
         uint  amount = msg.value;
@@ -44,7 +45,9 @@ contract Bank is  IWithdraw{
         updateThree(user);
     }
 
-    //topThree更新
+    /**
+     * Update topThree array
+     */
     function updateThree(address user) private {
         uint min = balances[user];
         uint minIndex = 3;
@@ -62,14 +65,19 @@ contract Bank is  IWithdraw{
             topThree[minIndex] = user;
         }
     }
-    //管理员取出所有ETH
+
+    /**
+     * Administrator withdraws all money
+     */
     function ownerWithdraw() public onlyAdministrator{
         address payable moneyOwner = payable(msg.sender);
         balances[moneyOwner] = 0;
         moneyOwner.transfer(address(this).balance);
     }
 
-    //用户取出存款
+    /**
+     * user withdraws money
+     */
     function userWithdraw(uint amount) public {
         address payable user = payable(msg.sender);
         if (amount > balances[user]) revert BalanceIsNotEnough(balances[user]);
@@ -79,22 +87,25 @@ contract Bank is  IWithdraw{
         user.transfer(userBalance);
     }
 
-    //查看银行存款总额
+    /**
+     * view bank's balance 
+     */
     function viewTotalAmount() public view onlyOwner returns(uint) {
         return address(this).balance;
     }
 
-    //查看存款前三的金额
+    /**
+     * view bank's balance 
+     */
     function viewTopThree() public view onlyOwner returns(address[3] memory){
         return topThree;
     }
 
-    //用户查看自身余额
+    /**
+     * View the amounts of the first three deposits
+     */
     function viewBalance() public view returns(uint) {
         return balances[msg.sender];
     }
-
-
- 
 
 }
