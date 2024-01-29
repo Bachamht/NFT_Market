@@ -1,0 +1,376 @@
+
+
+<html>
+
+<head>
+    <title>NFT Protocol</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main {
+            text-align: center;
+            margin: auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 50%;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .actions {
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .logs {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px;
+            min-width: 120px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #tokenDisplay {
+            margin-top: 20px;
+        }
+
+        .tokenItem {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        /* 在 Transaction Logs 区域外部添加边界感 */
+        .logs-container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+            padding: 15px;
+            max-width: 100%; /* 最大宽度 */
+            overflow-x: auto; /* 添加水平滚动条 */
+        }
+
+        .logs {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* 每个日志项的样式 */
+        .log-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            font-family: 'Arial', sans-serif;
+            white-space: pre-wrap; /* 允许换行 */
+        }
+        
+
+    </style>
+</head>
+
+<body>
+
+    <div class="main">
+
+        <h1>
+            NFT Market
+        </h1>
+        <button id="btnConn"> Connect Wallet </button>
+
+        <div class="actions">
+            <div class="input-group">
+                <input id="inputTokenID_list" type="number" placeholder="Token ID" />
+                <input id="inputPrice_list" type="number" placeholder="Price" />
+                <button id="listNFT">List NFT</button>
+            </div>
+            <div class="input-group">
+                <input id="inputTokenID_buy" type="number" placeholder="Token ID" />
+                <input id="inputPrice_buy" type="number" placeholder="Price" />
+                <button id="buyNFT"> Buy NFT </button>
+            </div>
+            <div id="tokenDisplay" class="display">
+                <h2>On sell NFTs</h2>
+            </div>
+            <div class="logs-container">
+                <h2>Transaction Logs</h2>
+                <div class="logs">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script type="module">
+        import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
+
+        var wallet;
+        var nftMarketContract;
+        var nftMarketAddress = "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1" 
+        var tokenAddress = "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d"
+        var nftAddress = "0x59b670e9fA9D0A427751Af201D676719a970857b"
+        var nftMarketAbi = [
+           "function sellNFTs(uint256 tokenID, uint256 amount) public",
+           "function removeNFT(uint tokenID) public",
+           "function buyNFT(uint256 tokenID, uint256 amount) public",
+           "function viewPrice(uint256 tokenID) public view returns(uint256)",
+           "function viewOwner(uint256 tokenID) public view returns(address)",
+           "function tokensRecieved(address from, address to, uint amount, bytes memory data) external",
+           "event BuySuccess(address buyer, uint tokenID)",
+           "event ListSuccess(uint256 tokenID, uint256 amount)",
+           "error MoneyNotEnough(uint amount)",
+           "error NotOwner(address msgSender, uint tokenID)",
+           "error NotOwner(address msgSender, uint tokenID)",
+        ]
+        var tokenAbi = [
+            "function allowance(address owner, address spender) external view returns (uint256)",
+            "function approve(address spender, uint256 value) external returns (bool)"
+        ]
+
+        var nftAbi = [
+            "function approve(address to, uint256 tokenId) public",
+            "function getApproved(uint256 tokenId) public view returns (address)"
+        ]
+
+        window.onload = function () {
+            document.getElementById("btnConn").onclick = handleConnection;
+            document.getElementById("listNFT").onclick = handleListNFT;
+            document.getElementById("buyNFT").onclick = handleBuyNFT;
+            handleConnection();
+        }
+
+        async function handleConnection() {
+
+            if (window.ethereum == null) {
+                printLog("Please install wallet first!")
+            } else {
+                let provider = new ethers.BrowserProvider(window.ethereum)
+                provider.getSigner().then((signer) => {
+                    printLog("welcome " + signer.address + " to NFT market !");
+                    updateWalletInfo(signer);//更新数据
+                    initNFTContract();//需要构建对象
+                    refreshState();
+                //动态展示list， buy 日志   
+                    let start = 13
+                    getLogs(start, start + 2)
+                }).catch(err => {
+                    console.log(Object.keys(err))
+                    printLog(err.reason ? err.reason : err);
+                });
+            }
+
+        }
+
+        // 更新钱包信息
+        async function updateWalletInfo(signer) {
+            wallet = signer;// update 
+        }
+
+        // 初始化nft合约对象
+        function initNFTContract() {
+            nftMarketContract = new ethers.Contract(nftMarketAddress, nftMarketAbi, wallet)
+        }
+
+        // 更新链上的状态数据
+        async function refreshState() {
+            if (!wallet) return;
+        }
+
+        //调用合约，上架NFT
+        async function handleListNFT() {
+            if (!nftMarketAddress) {
+                return;
+            }
+            let Price = document.getElementById('inputPrice_list').value;
+            let tokenID = document.getElementById('inputTokenID_list').value;
+            if (Price <= 0) {
+                printLog("Invalid price set!");
+                return;
+            }
+            //上架之前检查该NFT是否已经授权
+            const nftContract = new ethers.Contract(nftAddress, nftAbi, wallet)
+            let approvedAddress = await nftContract.getApproved(tokenID);
+            //没有授权先进行授权
+            if (approvedAddress !== nftMarketAddress) {
+                var tx = await nftContract.approve(nftMarketAddress, tokenID)
+                await tx.wait()
+            }
+            const result = await nftMarketContract.sellNFTs(tokenID, Price);
+            await result.wait()
+            displayToken(tokenID);
+            printTx(result);
+        }
+
+        //调用合约，购买NFT
+        async function handleBuyNFT() {
+            
+
+            const buyPrice = document.getElementById("inputPrice_buy").value;
+            const tokenID = document.getElementById("inputTokenID_buy").value;
+           
+            const sellPrice = await nftMarketContract.viewPrice(tokenID);
+            if (parseFloat(buyPrice) != sellPrice) {
+                printLog("Invalid price set!");
+                return;
+            } else {
+                //先检查代币是否approve
+                var tokenContract = new ethers.Contract(tokenAddress, tokenAbi, wallet)
+                let approvedAddress = await tokenContract.allowance(wallet.address, nftMarketAddress)
+                if (approvedAddress <= buyPrice) {
+                    await tokenContract.approve(nftMarketAddress, buyPrice);
+                }
+                var tx=await nftMarketContract.buyNFT(tokenID, buyPrice);
+                await tx.wait()
+                printTx(tx);
+
+            }
+
+            removeToken(tokenID);
+        }
+        
+        //前端页面加入上架NFT
+        async function displayToken(tokenID) {
+            var tokenDisplay = document.getElementById('tokenDisplay');
+            var tokenItem = document.createElement('div');
+            tokenItem.classList.add('tokenItem');
+            tokenItem.innerText = `Token ID: ${tokenID}`;
+            tokenDisplay.appendChild(tokenItem);
+        }
+
+        // 前端页面移除被购 NFT
+        async function removeToken(tokenID) {
+            var tokenDisplay = document.getElementById('tokenDisplay');
+            var tokenItems = document.getElementsByClassName('tokenItem');
+            for (var i = 0; i < tokenItems.length; i++) {
+                if (tokenItems[i].innerText.includes(`Token ID: ${tokenID}`)) {
+                    tokenDisplay.removeChild(tokenItems[i]);
+                    break;
+                }
+            }
+        }
+
+        //动态展示所有NFT Market中的 List、Buy 日志
+        async function getLogs(fromBlock, toBlock) {
+
+            const userAddress = wallet.address;
+
+            // 定义日志过滤器，去查询我需要的数据
+            let filter = {
+                fromBlock, toBlock,
+                address: nftMarketAddress,
+                // topics: [ //这是一个 Array<string>
+                //     bankContract.getEvent("Deposit").fragment.topicHash, ethers.zeroPadValue(userAddress, 32),
+                //     // [bankContract.getEvent("Withdraw").fragment.topicHash, ethers.zeroPadValue(userAddress, 32)],
+                // ]
+            }
+            // 检查 toBlock 是不是已经是最新的区块
+            let currentBlock = await wallet.provider.getBlockNumber();
+            // 如果是则获取到当前即可
+            if (filter.toBlock > currentBlock) {
+                filter.toBlock = currentBlock;
+            }
+            wallet.provider.getLogs(filter).then(logs => {
+                if (logs.length > 0) decodeEvents(logs);
+                // 2秒后继续取数据
+                if (currentBlock <= fromBlock && logs.length == 0) {
+                    console.log("begin monitor")
+                    // 如果没有获取到新的数据，可能是区块没有出现，继续retry
+                    //方式1，继续轮训
+                    setTimeout( () => {getLogs(fromBlock, toBlock)}, 2000);
+                    // 方式2: 监听
+                    //bankContract.on("Deposit",function(a0,a1,event){
+                    //  decodeEvents([event.log]);
+                    // })
+                    // bankContract.on("Withdraw",function(a0,a1,event){
+                    //     decodeEvents([event.log]);
+                    // })
+                    // bankContract.on("Top3Changed",function(a0,a1,a3,event){
+                    //     decodeEvents([event.log]);
+                    // })
+                } else {
+                    // 如果有数据则继续
+                    getLogs(toBlock + 1, toBlock + 1 + 2);
+                }
+            })
+
+        }
+
+        function decodeEvents(logs) {
+
+            const buySuccessEvent = nftMarketContract.getEvent("BuySuccess").fragment
+            const listSuccessEvent = nftMarketContract.getEvent("ListSuccess").fragment
+
+            for (var i = 0; i < logs.length; i++) {
+                const item = logs[i]
+                const eventId = item.topics[0]  // topic0
+                if (eventId == buySuccessEvent.topicHash) {// buySuccess event Id
+                    const data = nftMarketContract.interface.decodeEventLog(buySuccessEvent, item.data, item.topics)
+                    printLog(`Block:${item.blockNumber} The customer ${data.buyer}  buy NFT${data.tokenID}  (${item.transactionHash})`)
+                } else if (eventId == listSuccessEvent.topicHash) {
+                    const data = nftMarketContract.interface.decodeEventLog(listSuccessEvent, item.data, item.topics)
+                    printLog(`Block:${item.blockNumber} The NFT${data.tokenID} is listed at the price of ${data.amount} btc (${item.transactionHash})`)
+
+                } 
+            }
+        }
+        // 打印交易执行过程信息
+        async function printTx(result) {
+            printLog("Tx hash:" + result.hash)
+            printLog("Waiting tx minted....")
+
+            // 等待交易打包
+            const receipt = await result.wait()
+            printLog("Get Receipt:" + JSON.stringify(receipt, "", ""))
+
+            // 交易执行结束后更新状态
+            refreshState();
+        }
+
+        function printLog(msg) {
+            let logContainer = document.querySelector('.logs');
+            let logItem = document.createElement("div");
+            logItem.classList.add("log-item");
+
+            logItem.textContent = msg;
+            logContainer.appendChild(logItem);
+        }
+
+    </script>
+</body>
+
+</html>
