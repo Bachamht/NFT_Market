@@ -26,6 +26,7 @@ contract NFTMarket {
     address private signer; 
 
     bytes32 private constant BuyNFT_TYPEHASH = keccak256("BuyNFT(address buyer,uint256 tokenID)");
+    bytes32 private constant BuyNFTWithSign_TYPEHASH = keccak256("BuyNFTDirectly(uint256 tokenID, uint price)");
     bytes32 private constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 private DOMAIN_SEPARATOR;
 
@@ -134,25 +135,17 @@ contract NFTMarket {
 
     //白名单购买NFT
     function WhitelistBuy(uint256 tokenID, uint amount, bytes memory _signature) public {
-        require(permit(tokenID, _signature), "No Permission");
+        require(permitWhitelist(tokenID, _signature), "No Permission");
          address seller = IERC721(nftAddr).ownerOf(tokenID);
          IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
          IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
          emit BuySuccess(msg.sender, tokenID);
     }
 
-    //验签
-    function permit(uint256 tokenID, bytes memory _signature) internal returns(bool){
+    //验签(白名单)
+    function permitWhitelist(uint256 tokenID, bytes memory _signature) internal returns(bool) {
         require(_signature.length == 65, "invalid signature length");
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
-        assembly {
-            r := mload(add(_signature, 0x20))
-            s := mload(add(_signature, 0x40))
-            v := byte(0, mload(add(_signature, 0x60)))
-        }
-
+        (bytes32 r, bytes32 s, uint8 v) = decondeSignature(_signature);
         bytes32 _msgHash = keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR,
@@ -163,6 +156,29 @@ contract NFTMarket {
 
     }
 
+   //带着卖家离线签名购买NFT(免除上架操作)
+   function buyWithSignature(uint256 tokenID, uint amount, bytes memory _signature) public {
+        require(permitSignature(tokenID, amount,  _signature), "No Permission");
+        address seller = IERC721(nftAddr).ownerOf(tokenID);
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
+        IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
+        emit BuySuccess(msg.sender, tokenID);
+   }
+
+   //验签（买家直接带卖家签名前来购买）
+    function permitSignature(uint256 tokenID, uint amount, bytes memory _signature) internal returns(bool) {
+        require(_signature.length == 65, "invalid signature length");
+        bytes32 _msgHash = keccak256(abi.encodePacked(
+            "\x19\x01",
+            DOMAIN_SEPARATOR,
+            keccak256(abi.encode(BuyNFTWithSign_TYPEHASH, msg.sender, tokenID))
+        )); 
+        
+        address owner = viewOwner(tokenID);
+        return ( owner == _msgHash.recover(v, r, s));
+        
+    }
+
 
    //使用Slot模式读取和修改Owner地址
    function modifyOwner(address ownerChange) public OnlyMarketOwner{
@@ -171,6 +187,22 @@ contract NFTMarket {
         }
    }
     
+    //decode signature
+    function decondeSignature(bytes memory _signature) internal returns(bytes32, bytes32, uint8) {
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+        assembly {
+            r := mload(add(_signature, 0x20))
+            s := mload(add(_signature, 0x40))
+            v := byte(0, mload(add(_signature, 0x60)))
+        }
+        return (r, s, v);
+
+    }
+
+
     //bytes to uint256
     function bytesToUint(bytes memory b) internal returns (uint256){
         uint256 number;
