@@ -16,7 +16,6 @@ contract NFTMarketTest is Test {
     address seller = makeAddr("seller");
     
     function setUp() public {
-       // 使用管理员身份执行代码
         vm.startPrank(admin);{
             token = new btcToken();
             nft = new MyNFT();
@@ -26,7 +25,6 @@ contract NFTMarketTest is Test {
     }
 
     function list() internal {
-        //用户seller铸造NFT
         vm.startPrank(admin);{
             nft.mint(seller, "ipfs://test1");
             nft.mint(seller, "ipfs://test2");
@@ -34,7 +32,7 @@ contract NFTMarketTest is Test {
         }
         vm.stopPrank();
 
-         //用户上架NFT
+         
         vm.startPrank(seller);{
             nft.approve(address(market), 1);
             nft.approve(address(market), 2);
@@ -47,7 +45,6 @@ contract NFTMarketTest is Test {
     }
 
     function mintCoin() internal {
-        //买家铸造代币
         vm.startPrank(admin);{
             token.distributeTokens(buyer, 5000);
             uint256 balance = token.balanceOf(buyer);
@@ -56,11 +53,9 @@ contract NFTMarketTest is Test {
         vm.stopPrank();
     }
 
-    //测试上架功能
     function test_List() public {
 
         list();
-        //买家查看价格
         vm.startPrank(buyer);{
             uint256 price1 = market.viewPrice(1);
             assertEq(price1, 600, "the price is different");
@@ -73,12 +68,10 @@ contract NFTMarketTest is Test {
 
     }
     
-    //测试在market市场上购买NFT功能
     function test_buy() public{
         
         list();
         mintCoin();
-        //买家铸造代币
         vm.startPrank(admin);{
             token.distributeTokens(buyer, 5000);
             uint256 balance = token.balanceOf(buyer);
@@ -86,7 +79,6 @@ contract NFTMarketTest is Test {
         }
         vm.stopPrank();
         
-        //买家买NFT
         vm.startPrank(buyer);{
 
             token.approve(address(market), 3000);
@@ -96,7 +88,6 @@ contract NFTMarketTest is Test {
             market.buyNFT(2, 800);
             market.buyNFT(3, 1000);
 
-            //买后查看主人是是谁
             address owner = market.viewOwner(1);
             assertEq(owner, buyer, "owner is not correct");
             owner = market.viewOwner(2);
@@ -104,11 +95,9 @@ contract NFTMarketTest is Test {
             owner = market.viewOwner(3);
             assertEq(owner, buyer, "owner is not correct");
 
-            //买后查询卖家代币数量
             uint amount = token.balanceOf(seller);
             assertEq(amount, 2400, "seller's balance is not correct");
             
-            //买后查询买家代币数量
             amount = token.balanceOf(buyer);
             assertEq(amount, 2600, "buyer's balance is not correct");
 
@@ -117,12 +106,11 @@ contract NFTMarketTest is Test {
     }
 
 
-    //测试通过tokensRecieved功能购买NFT
+    
     function test_tokenRecieved() public {
         
         list();
         mintCoin();
-        //买家铸造代币
         vm.startPrank(admin);{
             token.distributeTokens(buyer, 5000);
             uint256 balance = token.balanceOf(buyer);
@@ -130,7 +118,6 @@ contract NFTMarketTest is Test {
         }
         vm.stopPrank();
 
-        //买家直接买NFT
         vm.startPrank(buyer);{
             bytes memory tokenID1 = abi.encode(1);
             bytes memory tokenID2 = abi.encode(2);
@@ -139,7 +126,6 @@ contract NFTMarketTest is Test {
             token.tokenTransferWithCallback(address(market), 600, tokenID1);
             token.tokenTransferWithCallback(address(market), 800, tokenID2);
             token.tokenTransferWithCallback(address(market), 1000,tokenID3);
-            //买后查看主人是是谁
             address owner = market.viewOwner(1);
             assertEq(owner, buyer, "owner is not correct");
             owner = market.viewOwner(2);
@@ -147,11 +133,9 @@ contract NFTMarketTest is Test {
             owner = market.viewOwner(3);
             assertEq(owner, buyer, "owner is not correct");
 
-            //买后查询卖家代币数量
             uint amount = token.balanceOf(seller);
             assertEq(amount, 2400, "seller's balance is not correct");
             
-            //买后查询买家代币数量
             amount = token.balanceOf(buyer);
             assertEq(amount, 2600, "buyer's balance is not correct");
 

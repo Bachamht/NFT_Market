@@ -50,7 +50,6 @@ contract Fuzz_market_test is Test{
     }
 
     function mintCoin() internal {
-        //买家铸造代币
         vm.startPrank(admin);{
             token.distributeTokens(buyer, 1000000);
             uint256 balance = token.balanceOf(buyer);

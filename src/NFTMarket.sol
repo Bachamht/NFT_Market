@@ -184,6 +184,7 @@ contract NFTMarket {
      */
     function permitSignature(uint256 tokenID, uint amount, bytes memory _signature) internal returns(bool) {
         require(_signature.length == 65, "invalid signature length");
+        (bytes32 r, bytes32 s, uint8 v) = decondeSignature(_signature);
         bytes32 _msgHash = keccak256(abi.encodePacked(
             "\x19\x01",
             DOMAIN_SEPARATOR,
