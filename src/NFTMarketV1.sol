@@ -16,7 +16,7 @@ interface IERC721 {
         function approve(address to, uint256 tokenId) external;
 }
 
-contract NFTMarket is OwnableUpgradeable {
+contract NFTMarketV1 is OwnableUpgradeable {
 
     using SafeERC20 for IERC20;
     using ECDSA for bytes32;
@@ -68,23 +68,7 @@ contract NFTMarket is OwnableUpgradeable {
         if (isListed[tokenID] == false) revert NotSelling(tokenID);
         _;
     }
-    
-    /*
-    constructor(address NftAddr, address TokenPool) {
-        nftAddr = NftAddr;
-        tokenPool = TokenPool;
-        signer = msg.sender;
-        marketOwner = msg.sender;
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            EIP712DOMAIN_TYPEHASH, // type hash
-            keccak256(bytes("EIP712Storage")), // name
-            keccak256(bytes("1")), // version
-            block.chainid, // chain id
-            address(this) // contract address
-        ));
-    }
-    */
-
+   
     /**
      * initialize， Replacing Constructors 
      */

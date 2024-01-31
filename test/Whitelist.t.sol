@@ -26,7 +26,8 @@ contract Whitelist_test is Test{
         vm.startPrank(owner);{
             token = new btcToken();
             nft = new MyNFT();
-            market = new NFTMarket(address(nft), address(token));
+            market = new NFTMarket();
+            market.initialize(address(nft), address(token));
             DOMAIN_SEPARATOR = keccak256(abi.encode(
                 EIP712DOMAIN_TYPEHASH, 
                 keccak256(bytes("EIP712Storage")), 

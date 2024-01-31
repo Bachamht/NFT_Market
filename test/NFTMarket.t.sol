@@ -19,7 +19,8 @@ contract NFTMarketTest is Test {
         vm.startPrank(admin);{
             token = new btcToken();
             nft = new MyNFT();
-            market = new NFTMarket(address(nft), address(token));
+            market = new NFTMarket();
+            market.initialize(address(nft), address(token));
         }
         vm.stopPrank();
     }
