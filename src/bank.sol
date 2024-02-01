@@ -15,6 +15,8 @@ contract Bank is  IWithdraw{
     address internal owner;
     address internal administrator;
     address [3] private topThree;
+
+    mapping(address -> address) internal _nextSaver;
     mapping(address => uint) internal balances;
 
     error BalanceIsNotEnough(uint);
@@ -107,5 +109,13 @@ contract Bank is  IWithdraw{
     function viewBalance() public view returns(uint) {
         return balances[msg.sender];
     }
+
+    /**
+     * record the depositer by using mapping and sort them
+     */
+
+     function Deposit(uint amount) public {
+
+     }
 
 }
