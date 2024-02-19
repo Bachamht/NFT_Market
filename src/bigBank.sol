@@ -16,13 +16,7 @@ contract BigBank is Bank {
     }
 
   
-    /**
-     * user deposit
-     */
-    function deposit() internal amountCheck(msg.value) override {
-        balances[msg.sender] += msg.value;
-    }
-
+   
     /**
      * Set up an administrator for the contract
      */
@@ -49,13 +43,7 @@ contract BigBank is Bank {
         return balances[who];
     }
     
-   /*
-    function permitDeposit(address user, uint amount, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        IERC20Permit(token).permit(msg.sender, address(this), amount, deadline, v, r, s);
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
-        balances[user] += amount;   
-    }
-    */
+  
 
     
 

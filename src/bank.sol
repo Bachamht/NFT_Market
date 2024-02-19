@@ -1,26 +1,33 @@
 // SPDX-License-Identifier: GPL-3.0
 
+
 pragma solidity ^0.8.0;
 
 interface IWithdraw {
         function ownerWithdraw() external;
 }
 
-contract Bank is  IWithdraw{
+contract Bank is IWithdraw{
 
-    constructor() {
-        owner = msg.sender;
-    }
 
     address internal owner;
     address internal administrator;
-    address [3] private topThree;
+    address [10] private topThree;
 
-    mapping(address -> address) internal _nextSaver;
     mapping(address => uint) internal balances;
+    mapping(address => address) internal _nextSaver;
+    uint256 public listSize;
+    address constant GUARD = address(1);
 
+
+    uint256 testT;
     error BalanceIsNotEnough(uint);
     
+    constructor() {
+        owner = msg.sender;
+        _nextSaver[GUARD] = GUARD;
+    }
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not administrator ");
         _;
@@ -41,30 +48,13 @@ contract Bank is  IWithdraw{
      */
     function deposit() virtual internal {
         
-        uint  amount = msg.value;
+        uint256 amount = msg.value;
         address user = msg.sender;
-        balances[user] += amount;
-        updateThree(user);
-    }
-
-    /**
-     * Update topThree array
-     */
-    function updateThree(address user) private {
-        uint min = balances[user];
-        uint minIndex = 3;
-        for (uint i = 0; i < 3; i++) {
-            if (topThree[i] == user) {
-                minIndex = 3;
-                break;
-            }
-            if (balances[topThree[i]] < min) {
-                min = balances[topThree[i]];
-                minIndex = i;
-            }
-        }
-        if (minIndex < 3) {
-            topThree[minIndex] = user;
+        uint256 balance = amount += balances[msg.sender];
+        if (_nextSaver[msg.sender] == address(0)){
+            addDepositer(msg.sender, balance);
+        }else{
+            updateBalance(msg.sender, balance);
         }
     }
 
@@ -90,18 +80,13 @@ contract Bank is  IWithdraw{
     }
 
     /**
-     * view bank's balance 
+     * view bank's total balance 
      */
     function viewTotalAmount() public view onlyOwner returns(uint) {
         return address(this).balance;
     }
 
-    /**
-     * view bank's balance 
-     */
-    function viewTopThree() public view onlyOwner returns(address[3] memory){
-        return topThree;
-    }
+  
 
     /**
      * View the amounts of the first three deposits
@@ -110,12 +95,105 @@ contract Bank is  IWithdraw{
         return balances[msg.sender];
     }
 
-    /**
-     * record the depositer by using mapping and sort them
+     /**
+     * get pre depositer
      */
-
-     function Deposit(uint amount) public {
-
+     function _getPredepositer(address depositer) internal view returns(address) {
+        address currentAddress = GUARD;
+        while(_nextSaver[currentAddress] != GUARD) {
+            if (_nextSaver[currentAddress] == depositer) {
+                return currentAddress;
+            }
+            currentAddress = _nextSaver[currentAddress];
+        }
+        return address(0);
      }
+
+    /**
+     * view the top 10 depositers
+     */
+    function viewTopTen() public view onlyOwner returns(address[] memory){
+        address[] memory depositers = new address[](listSize);
+        address currentAddress = _nextSaver[GUARD];
+        for (uint i = 0; i < 10; ++i) {
+            depositers[i] = currentAddress;
+            currentAddress = _nextSaver[currentAddress];
+        }
+        return depositers;
+    }
+
+    /**
+     * Verify that the newly added deposit is in the correct location
+     */
+    function _verifyIndex(address preDepositer, uint256 newBalance, address nextDepositer) internal view returns(bool) {
+        return (preDepositer == GUARD || balances[preDepositer] >= newBalance) &&
+               (nextDepositer == GUARD || newBalance > balances[nextDepositer]);
+    }
+
+    /**
+     * find the newly added deposit where to be inserted
+     */
+    function _findIndex(uint256 newValue) internal view returns(address) {
+        address candidateAddress = GUARD;
+        while(true) {
+            if(_verifyIndex(candidateAddress, newValue, _nextSaver[candidateAddress]))
+                return candidateAddress;
+                candidateAddress = _nextSaver[candidateAddress];
+        } 
+    }
+
+    /**
+     * add the deposit 
+     */
+    function addDepositer(address depositer, uint256 newBalance) internal {
+        address index = _findIndex(newBalance);
+        balances[depositer] = newBalance;
+        _nextSaver[depositer] = _nextSaver[index];
+        _nextSaver[index] = depositer;
+        listSize++;
+    }
+    
+    /**
+     * remove the depositer
+     */
+    function removeDepositer(address depositer) internal {
+        address prevDepositer = _getPredepositer(depositer);
+        _nextSaver[prevDepositer] = _nextSaver[depositer];
+        _nextSaver[depositer] = address(0);
+        listSize--;
+    }
+
+     /**
+     * update the deposit 
+     */
+    function updateBalance(address depositer, uint256 newBalance) internal {
+        address prevDepositer = _getPredepositer(depositer);
+        address nextDepositer = _nextSaver[depositer];
+        if(_verifyIndex(prevDepositer, newBalance, nextDepositer)){
+        balances[depositer] = newBalance;
+        } else {
+        removeDepositer(depositer);
+        addDepositer(depositer, newBalance);
+        }
+    }
+
+    /**
+     * verify the depositer
+     */
+    function isDepositer(address depositer) public returns(bool){
+        return (_nextSaver[depositer] != address(0));
+    }
+
+    function viewlistamount() public returns(uint256){
+        return listSize;
+    }
+
+    function  viewAddtest(address test) public returns(address) {
+        return _nextSaver[test];
+    }
+    
+    function viewtestT() public returns(uint256) {
+        return testT;
+    }
 
 }
