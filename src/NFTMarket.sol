@@ -21,15 +21,15 @@ contract NFTMarket is OwnableUpgradeable {
     using SafeERC20 for IERC20;
     using ECDSA for bytes32;
 
-    address private marketOwner;
-    address private nftAddr;
-    address private tokenPool;
-    address private signer; 
+    address public marketOwner;
+    address public nftAddr;
+    address public tokenPool;
+    address public signer; 
 
-    bytes32 private constant BuyNFT_TYPEHASH = keccak256("BuyNFT(address buyer,uint256 tokenID)");
-    bytes32 private constant BuyNFTWithSign_TYPEHASH = keccak256("BuyNFTDirectly(uint256 tokenID, uint price)");
-    bytes32 private constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-    bytes32 private DOMAIN_SEPARATOR;
+    bytes32 public constant BuyNFT_TYPEHASH = keccak256("BuyNFT(address buyer,uint256 tokenID)");
+    bytes32 public constant BuyNFTWithSign_TYPEHASH = keccak256("BuyNFTDirectly(uint256 tokenID, uint price)");
+    bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 public DOMAIN_SEPARATOR;
 
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);

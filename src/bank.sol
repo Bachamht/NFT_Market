@@ -184,16 +184,9 @@ contract Bank is IWithdraw{
         return (_nextSaver[depositer] != address(0));
     }
 
-    function viewlistamount() public returns(uint256){
-        return listSize;
-    }
-
-    function  viewAddtest(address test) public returns(address) {
-        return _nextSaver[test];
-    }
     
-    function viewtestT() public returns(uint256) {
-        return testT;
-    }
+     
+
+
 
 }

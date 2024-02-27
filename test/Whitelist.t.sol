@@ -18,8 +18,6 @@ contract Whitelist_test is Test{
         bytes32 private constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
         bytes32 private DOMAIN_SEPARATOR;
 
-    
-    
     function setUp() public {
     
         (owner, ownerPkey) = makeAddrAndKey("owner");

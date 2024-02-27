@@ -15,7 +15,6 @@ contract BigBank is Bank {
         _;
     }
 
-  
    
     /**
      * Set up an administrator for the contract
