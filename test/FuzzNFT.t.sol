@@ -1,21 +1,22 @@
-/*
-    使用Fuzz测试 Bank 合约的存款和取款功能
-    使用Fuzz测试 NFTMaket 合约的 transferWithCallbak
-    注册 Dune 账号
-*/
-
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {NFTMarket} from "../src/NFTMarket.sol";
-import {btcToken}  from "../src/Token.sol";
+import {CGToken}  from "../src/Token.sol";
 import {MyNFT}    from "../src/MyNFT.sol";
+import {UniswapV2Router02} from "../src/uniswapV2_periphery/UniswapV2Router02.sol";
+import {UniswapV2Factory} from "../src/uniswapV2_core/UniswapV2Factory.sol";
+import {WETH9} from "../src/uniswapV2_periphery/WETH9.sol";
 
 contract Fuzz_market_test is Test{
         NFTMarket market;  
-        btcToken  token;
-        MyNFT     nft; 
+        CGToken  token;
+        MyNFT     nft;
+        UniswapV2Factory factory;
+        UniswapV2Router02 router;
+        WETH9 weth;
+ 
     
         address admin = makeAddr("myadmin");
         address buyer = makeAddr("buyer");
@@ -24,10 +25,13 @@ contract Fuzz_market_test is Test{
     
     function setUp() public {
         vm.startPrank(admin);{
-            token = new btcToken();
+            token = new CGToken();
             nft = new MyNFT();
             market = new NFTMarket();
-            market.initialize(address(nft), address(token));
+            factory = new UniswapV2Factory(admin);
+            weth = new WETH9();
+            router = new UniswapV2Router02(address(factory), address(weth));
+            market.initialize(address(nft), address(token), address(factory), address(weth), address(router));
         }
         vm.stopPrank();
         list();

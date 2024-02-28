@@ -16,12 +16,12 @@ contract UpgradeMarketScript is BaseScript{
         Options memory opts;
         opts.unsafeSkipAllChecks = true;
 
-        proxyAddress = Upgrades.deployTransparentProxy(
-        "NFTMarket.sol",
-        admin,
-        abi.encodeCall(NFTMarket.initialize, (0x47f1d75fd1A6f9530efa50e2Ed0C61a2B236e9a2,0xfCEe1e76831076b395A4F22Fd884f63929523E0d)),
-        opts
-        );
+        // proxyAddress = Upgrades.deployTransparentProxy(
+        // "NFTMarket.sol",
+        // admin,
+        // abi.encodeCall(NFTMarket.initialize, (0x47f1d75fd1A6f9530efa50e2Ed0C61a2B236e9a2,0xfCEe1e76831076b395A4F22Fd884f63929523E0d)),
+        // opts
+        // );
 
         address adminAddress = Upgrades.getAdminAddress(proxyAddress);
         address implementationAddress = Upgrades.getImplementationAddress(proxyAddress);

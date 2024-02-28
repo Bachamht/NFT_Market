@@ -33,6 +33,10 @@ contract AirdopMerkleNFTMarket is NFTMarket{
     bytes32 public rootHash;
     mapping (address => bool) whitelist;
 
+    constructor () {
+        
+    }
+
     error NotInWhitelist(address msgSender);
 
     /**

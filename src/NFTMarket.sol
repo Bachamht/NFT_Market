@@ -7,7 +7,8 @@ import "lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ECDSA} from "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import "lib/openzeppelin-contracts-upgradeable/contracts/utils/cryptography/EIP712Upgradeable.sol";
-
+import "./uniswapV2_core/interfaces/IUniswapV2Factory.sol";
+import {UniswapV2Router02} from "./uniswapV2_periphery/UniswapV2Router02.sol";
 
 
 interface IERC721 {
@@ -22,9 +23,12 @@ contract NFTMarket is OwnableUpgradeable {
     using ECDSA for bytes32;
 
     address public marketOwner;
+    address public signer;
     address public nftAddr;
     address public tokenPool;
-    address public signer; 
+    address public weth;
+    address public uniswapV2Factory;
+    address public uniswapV2Router;
 
     bytes32 public constant BuyNFT_TYPEHASH = keccak256("BuyNFT(address buyer,uint256 tokenID)");
     bytes32 public constant BuyNFTWithSign_TYPEHASH = keccak256("BuyNFTDirectly(uint256 tokenID, uint price)");
@@ -38,6 +42,8 @@ contract NFTMarket is OwnableUpgradeable {
     error NotOwner(address msgSender, uint tokenID);
     error NotSelling(uint256 tokenID);
     error NotMarketOwner(address sender);
+    error NotTradingPairExist();
+    error PaymentLimitExceeded();
 
     mapping(uint256 => uint256) price;
     mapping(uint256 => bool) isListed;
@@ -69,30 +75,39 @@ contract NFTMarket is OwnableUpgradeable {
         _;
     }
     
-    /*
-    constructor(address NftAddr, address TokenPool) {
-        nftAddr = NftAddr;
-        tokenPool = TokenPool;
-        signer = msg.sender;
-        marketOwner = msg.sender;
-        DOMAIN_SEPARATOR = keccak256(abi.encode(
-            EIP712DOMAIN_TYPEHASH, // type hash
-            keccak256(bytes("EIP712Storage")), // name
-            keccak256(bytes("1")), // version
-            block.chainid, // chain id
-            address(this) // contract address
-        ));
-    }
-    */
+    
+    // constructor(address NftAddr, address TokenPool, address WETH, address factory, address router) {
+    //     nftAddr = NftAddr;
+    //     tokenPool = TokenPool;
+    //     signer = msg.sender;
+    //     marketOwner = msg.sender;
+    //     weth = WETH;
+    //     uniswapV2Factory = factory;
+    //     uniswapV2Router = router;
+    //     DOMAIN_SEPARATOR = keccak256(abi.encode(
+    //         EIP712DOMAIN_TYPEHASH, // type hash
+    //         keccak256(bytes("EIP712Storage")), // name
+    //         keccak256(bytes("1")), // version
+    //         block.chainid, // chain id
+    //         address(this) // contract address
+    //     ));
+    // }
+    
 
     /**
-     * initialize， Replacing Constructors 
+     * initialize， Replacing Constructors.
+     * Used when deploying upgradable contracts
      */
-    function initialize(address NftAddr, address TokenPool) public initializer{
+
+    
+    function initialize(address NftAddr, address TokenPool, address WETH, address factory, address router) public initializer{
         nftAddr = NftAddr;
         tokenPool = TokenPool;
         signer = msg.sender;
         marketOwner = msg.sender;
+        weth = WETH;
+        uniswapV2Factory = factory;
+        uniswapV2Router = router;
         DOMAIN_SEPARATOR = keccak256(abi.encode(
             EIP712DOMAIN_TYPEHASH, // type hash
             keccak256(bytes("EIP712Storage")), // name
@@ -101,6 +116,7 @@ contract NFTMarket is OwnableUpgradeable {
             address(this) // contract address
         ));
     }
+    
 
     /**
      * User lists nft for sale
@@ -201,9 +217,31 @@ contract NFTMarket is OwnableUpgradeable {
    }
 
    /**
-     * Verify signature issued by seller
+     * If there is a trading pair between CG and the token paid by the user, the transaction will be conducted directly.
+     *  Otherwise, the user's payment token will be converted into weth before the transaction.
      */
-    
+    function buyByERC20Token(address token, uint256 tokenId, uint256 amountsInMax, bool needWeth) public {
+        uint256 nftPrice = price[tokenId];
+        address seller = IERC721(nftAddr).ownerOf(tokenId);
+        address [] memory path1;
+        address [] memory path2;
+        uint256 time = block.timestamp;
+        if (needWeth == false) {
+            path1[0] = token;
+            path1[1] = tokenPool;
+            UniswapV2Router02(payable(uniswapV2Router)).swapExactTokensForTokens(nftPrice, amountsInMax, path1, seller, time + 600); 
+
+        } else {
+            path2[0] = token;
+            path2[0] = weth;
+            path2[0] = tokenPool;
+            UniswapV2Router02(payable(uniswapV2Router)).swapExactTokensForTokens(nftPrice, amountsInMax, path2, seller, time + 600); 
+        }
+        IERC721(nftAddr).transferFrom(seller, msg.sender, tokenId) ;
+        emit BuySuccess(msg.sender, tokenId);
+    }
+
+  
 
    /**
      * Verify signature issued by seller
@@ -259,4 +297,12 @@ contract NFTMarket is OwnableUpgradeable {
         }
         return  number;
     }
+
+    /**
+     * Check if the trading pair exists
+     */
+     function checkPairExist(address tokenA, address tokenB) internal returns(bool) {
+
+     }
+
 }

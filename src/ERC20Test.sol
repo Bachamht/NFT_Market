@@ -9,9 +9,9 @@ interface ItokenRecieved {
      function tokensRecieved(address from, address to, uint amount, bytes memory data) external; 
 } 
 
-contract CGToken is ERC20Permit{
+contract TestCoin is ERC20Permit{
     
-    constructor() ERC20("CodGod", "CG") ERC20Permit("ERC2612"){
+    constructor() ERC20("test", "test") ERC20Permit("ERC2612"){
          owner = msg.sender;
     }
 

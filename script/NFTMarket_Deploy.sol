@@ -4,14 +4,14 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "./BaseScript.s.sol";
 import {MyNFT} from "src/MyNFT.sol";
-import {btcToken} from "src/Token.sol";
+import {CGToken} from "src/Token.sol";
 
 
 contract Deploy is Script, BaseScript {
 
     function deployToken() public {
         vm.startBroadcast(privateKEY);
-        btcToken token = new btcToken();
+        CGToken token = new CGToken();
         console.log("Token:",address(token));
     }
 

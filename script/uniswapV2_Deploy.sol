@@ -2,8 +2,8 @@ pragma solidity ^0.8.4;
 
 import "forge-std/Script.sol";
 import {UniswapV2Factory} from "../src/uniswapV2_core/UniswapV2Factory.sol";
-import {UniswapV2Router02} from "../src/uniswapV2-periphery/UniswapV2Router02.sol";
-import {WETH9} from "../src/uniswapV2-periphery/WETH9.sol";
+import {UniswapV2Router02} from "../src/uniswapV2_periphery/UniswapV2Router02.sol";
+import {WETH9} from "../src/uniswapV2_periphery/WETH9.sol";
 
 contract UniswapV2Deploy is Script {
     function setUp() public {}
