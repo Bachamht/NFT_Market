@@ -23,7 +23,6 @@ contract Deploy is Script, BaseScript {
 
     //token address : 0xfCEe1e76831076b395A4F22Fd884f63929523E0d
     //nft address : 0x47f1d75fd1A6f9530efa50e2Ed0C61a2B236e9a2
-
     //Market: 0xdaE97900D4B184c5D2012dcdB658c008966466DD
 
 }

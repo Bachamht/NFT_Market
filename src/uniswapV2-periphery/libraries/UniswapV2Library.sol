@@ -21,9 +21,10 @@ library UniswapV2Library {
                 hex'ff',
                 factory,
                 keccak256(abi.encodePacked(token0, token1)),
-                hex'96e8ac4277198ff8b6f785478aa9a39f403cb768dd02cbee326c3e7da348845f' // init code hash
+                hex'a2b4f32a54d4f22b2b5a4c5f4aa039bea51b6515aabbb6c980e308cd871b6be1' // init code hash
             )))));
     }
+    //'a2b4f32a54d4f22b2b5a4c5f4aa039bea51b6515aabbb6c980e308cd871b6be1' = keccak256(abi.encodePacked(type(UniswapV2Pair).creationCode));
 
     // fetches and sorts the reserves for a pair
     function getReserves(address factory, address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {

@@ -203,6 +203,11 @@ contract NFTMarket is OwnableUpgradeable {
    /**
      * Verify signature issued by seller
      */
+    
+
+   /**
+     * Verify signature issued by seller
+     */
     function permitSignature(uint256 tokenID, uint amount, bytes memory _signature) internal returns(bool) {
         require(_signature.length == 65, "invalid signature length");
         (bytes32 r, bytes32 s, uint8 v) = decondeSignature(_signature);
