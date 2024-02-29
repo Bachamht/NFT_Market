@@ -36,8 +36,17 @@ contract NFTMarket is OwnableUpgradeable {
     bytes32 public DOMAIN_SEPARATOR;
 
     uint256 public txFeeTotalAmount;
-    uint16  constant HUNDRED = 100;
     uint16  public fee;
+    uint256 public currentInterestRate;
+    uint256 public accumulatedInterestRate;
+    uint256 constant public MILLION = 10 ** 7;
+    uint16  constant public HUNDRED = 100;
+
+    mapping (address => uint256) stakeAmount;
+    mapping (address => uint256) earnAmount;
+    mapping (address => uint256) personalInterestRate;
+
+
 
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);
@@ -48,6 +57,7 @@ contract NFTMarket is OwnableUpgradeable {
     error NotMarketOwner(address sender);
     error NotTradingPairExist();
     error PaymentLimitExceeded();
+    error TransferFailed();
 
     mapping(uint256 => uint256) price;
     mapping(uint256 => bool) isListed;
@@ -250,7 +260,39 @@ contract NFTMarket is OwnableUpgradeable {
         emit BuySuccess(msg.sender, tokenId);
     }
 
-  
+    /**
+     * Users stake eth to receive platform currency（CG） rewards
+     */
+    function stakeETH() payable public {
+        uint256 StakeAmount = stakeAmount[msg.sender];
+        earnAmount[msg.sender] = (accumulatedInterestRate - personalInterestRate[msg.sender]) * StakeAmount / MILLION;
+        stakeAmount[msg.sender] += msg.value / MILLION;
+        currentInterestRate =  txFeeTotalAmount / address(this).balance;
+        accumulatedInterestRate += currentInterestRate;
+        personalInterestRate[msg.sender] = accumulatedInterestRate; 
+    }
+
+    /**
+     * User redeems staking rewards
+     */   
+    function RedeemETH() public {
+        uint StakeAmount = stakeAmount[msg.sender];
+        (bool sent, bytes memory data) = msg.sender.call{value: stakeAmount[msg.sender]}("");
+        if(!sent) revert TransferFailed();
+        stakeAmount[msg.sender] = 0;
+        uint256 interestAmount = earnAmount[msg.sender] + (accumulatedInterestRate - personalInterestRate[msg.sender]) * StakeAmount / MILLION;
+        IERC20(tokenPool).safeTransferFrom(address(this), msg.sender, interestAmount);
+    }
+
+    /**
+     * Users get staking rewards
+     */
+    function claimRewards() public {
+        uint256 StakeAmount = stakeAmount[msg.sender];
+        uint256 interestAmount = earnAmount[msg.sender] + (accumulatedInterestRate - personalInterestRate[msg.sender]) * StakeAmount / MILLION;
+        IERC20(tokenPool).safeTransferFrom(address(this), msg.sender, interestAmount);
+        personalInterestRate[msg.sender] = accumulatedInterestRate; 
+    }
 
    /**
      * Verify signature issued by seller

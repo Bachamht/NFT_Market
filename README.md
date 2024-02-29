@@ -28,7 +28,7 @@ Good luck, bro.
 
 * Based on uniswapV2, support any ERC20 Token to buy NFT.
 
-  
+* Supports staking ETH and returning platform coins as rewards
 
 ## key techniques
 
