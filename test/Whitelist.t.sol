@@ -63,7 +63,7 @@ contract Whitelist_test is Test{
         vm.stopPrank();
 
         vm.startPrank(buyer);{
-            market.WhitelistBuy(1, 999, signature);
+            market.WhitelistBuy(1, signature);
         }
         vm.stopPrank();
 

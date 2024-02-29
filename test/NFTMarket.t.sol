@@ -94,9 +94,9 @@ contract NFTMarketTest is Test {
             token.approve(address(market), 3000);
             uint256 allowance = token.allowance(buyer, address(market));
             assertEq(allowance, 3000, "allowance is not correct");
-            market.buyNFT(1, 600);
-            market.buyNFT(2, 800);
-            market.buyNFT(3, 1000);
+            market.buyNFT(1);
+            market.buyNFT(2);
+            market.buyNFT(3);
 
             address owner = market.viewOwner(1);
             assertEq(owner, buyer, "owner is not correct");

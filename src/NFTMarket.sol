@@ -35,6 +35,10 @@ contract NFTMarket is OwnableUpgradeable {
     bytes32 public constant EIP712DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
     bytes32 public DOMAIN_SEPARATOR;
 
+    uint256 public txFeeTotalAmount;
+    uint16  constant HUNDRED = 100;
+    uint16  public fee;
+
     event BuySuccess(address buyer, uint tokenID);
     event ListSuccess(uint256 tokenID, uint256 amount);
 
@@ -47,11 +51,6 @@ contract NFTMarket is OwnableUpgradeable {
 
     mapping(uint256 => uint256) price;
     mapping(uint256 => bool) isListed;
-
-    modifier NotEnough(uint256 amount, uint256 tokenID) {
-        if (amount < price[tokenID]) revert MoneyNotEnough(amount);
-        _;
-    }
 
     modifier OnlyOwner(uint256 tokenID){
         address nftOwner = IERC721(nftAddr).ownerOf(tokenID);
@@ -141,13 +140,15 @@ contract NFTMarket is OwnableUpgradeable {
      * The seller needs to approve the nft to the market 
      * The buyer needs to approve the tokens to the market
      */
-    function buyNFT(uint256 tokenID, uint256 amount) public isOnSelling2(tokenID) NotEnough(amount, tokenID) {
-       
+    function buyNFT(uint256 tokenID) public isOnSelling2(tokenID) {
+        uint256 amount = price[tokenID];
         address seller = IERC721(nftAddr).ownerOf(tokenID);
+        uint256 txfeeNeed = (amount * fee) / HUNDRED;
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, txfeeNeed);
+        txFeeTotalAmount += txfeeNeed;
         IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
         IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
         emit BuySuccess(msg.sender, tokenID);
-
     }
 
     /**
@@ -160,7 +161,7 @@ contract NFTMarket is OwnableUpgradeable {
     /**
      * View NFT's owner
      */
-    function viewOwner(uint256 tokenID) public returns(address) {
+    function viewOwner(uint256 tokenID) public  returns(address) {
         return IERC721(nftAddr).ownerOf(tokenID);
     }
 
@@ -180,12 +181,16 @@ contract NFTMarket is OwnableUpgradeable {
      * whitelist mode
      * Only users with signatures issued by the project party can purchase the corresponding NFT
      */
-    function WhitelistBuy(uint256 tokenID, uint amount, bytes memory _signature) public {
+    function WhitelistBuy(uint256 tokenID, bytes memory _signature) public {
         require(permitWhitelist(tokenID, _signature), "No Permission");
-         address seller = IERC721(nftAddr).ownerOf(tokenID);
-         IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
-         IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
-         emit BuySuccess(msg.sender, tokenID);
+        uint256 amount = price[tokenID];
+        address seller = IERC721(nftAddr).ownerOf(tokenID);
+        uint256 txfeeNeed = (amount * fee) / HUNDRED;
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, txfeeNeed);
+        txFeeTotalAmount += txfeeNeed;
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
+        IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
+        emit BuySuccess(msg.sender, tokenID);
     }
 
     /**
@@ -208,9 +213,12 @@ contract NFTMarket is OwnableUpgradeable {
      * Sellers do not need to list NFT
      * Buyers can directly purchase NFTs with the signature of the seller
      */
-   function buyWithSignature(uint256 tokenID, uint amount, bytes memory _signature) public {
+   function buyWithSignature(uint256 tokenID,uint amount,  bytes memory _signature) public {
         require(permitSignature(tokenID, amount,  _signature), "No Permission");
         address seller = IERC721(nftAddr).ownerOf(tokenID);
+        uint256 txfeeNeed = (amount * fee) / HUNDRED;
+        IERC20(tokenPool).safeTransferFrom(msg.sender, seller, txfeeNeed);
+        txFeeTotalAmount += txfeeNeed;
         IERC20(tokenPool).safeTransferFrom(msg.sender, seller, amount);
         IERC721(nftAddr).transferFrom(seller, msg.sender, tokenID) ;
         emit BuySuccess(msg.sender, tokenID);
@@ -226,6 +234,7 @@ contract NFTMarket is OwnableUpgradeable {
         address [] memory path1;
         address [] memory path2;
         uint256 time = block.timestamp;
+        IERC20(tokenPool).safeTransferFrom(msg.sender, address(this), amountsInMax);
         if (needWeth == false) {
             path1[0] = token;
             path1[1] = tokenPool;
@@ -299,10 +308,9 @@ contract NFTMarket is OwnableUpgradeable {
     }
 
     /**
-     * Check if the trading pair exists
+     * Setting the transaction fee rate
      */
-     function checkPairExist(address tokenA, address tokenB) internal returns(bool) {
-
-     }
-
+    function setFee(uint16 _fee) public OnlyMarketOwner{
+        fee = _fee;
+    }
 }
