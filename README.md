@@ -1,86 +1,79 @@
-## Deploy a transparent proxy with foundry
+## NFT_Market 😜
 
-1. Firstly, run the script (script/upgradeMarket.s.sol)  to deploy:
+[![MIT License][license-shield]][license-url]
 
-```solidity
-function run() public {
-        
-        Options memory opts;
-        opts.unsafeSkipAllChecks = true;
+This is a project I used to practice solidity development, which contains a lot of key techniques in solidity development.
 
-        proxyAddress = Upgrades.deployTransparentProxy(
-        "NFTMarket.sol",
-        admin,
-        abi.encodeCall(NFTMarket.initialize, 		(0x47f1d75fd1A6f9530efa50e2Ed0C61a2B236e9a2,0xfCEe1e76831076b395A4F22Fd884f63929523E0d)),
-        opts
-        );
+If you are a newbie, you can clone this repository to learn. 
 
-        address adminAddress = Upgrades.getAdminAddress(proxyAddress);
-        address implementationAddress = Upgrades.getImplementationAddress(proxyAddress);
+If you find any bugs, feel free to pr.
 
-        console.log("Market Proxy contract deployed on %s", address(proxyAddress));
-        console.log("Market contract deployed on %s", address(implementationAddress));
-        console.log("admin contract deployed on %s", address(adminAddress));       
-    }
-    
-```
+Good luck, bro.
 
 
 
-2. Execute in a terminal：
+##   Key Features Overview
 
-```shell
-forge script --rpc-url https://eth-sepolia.api.onfinality.io/public	 ./script/upgradeMarket.s.sol --ffi --broadcast 
-```
+* Iterable mappable storage with O(1) complexity
 
+* Using slots for reading and writing data
 
+* Scalable Contracts (Transparent Agents)
 
-3. Then you get three addresses：
+* Offline authorization using signatures
 
-The address of the **proxy contract** is： **0xD659236296Dd08EDABB07c47295a68CC5871fce6**
+* Implementing Whitelisting with Merkel Trees
 
-The address of the **admin contract** is： **0xd1d32754Ef255647DCad2A97855D1AC2A0aBF773**
+* Using Multicall to Batch Execute Function Calls
 
-The address of the **implementation contract** is : **0x95871d75b415d06dbCEcE6959c21BDd15db17702**
+* Based on uniswapV2, support any ERC20 Token to buy NFT.
 
+  
 
+## key techniques
 
-4. Now perform an upgrade operation， run the script (script/upgradeMarket.s.sol)：
+##### *EIPs involved*
 
-```solidity
-  function upgradeContract() public { 
-        Options memory opts;
-        opts.unsafeSkipAllChecks = true;
-        opts.referenceContract = "NFTMarket.sol";
-
-        Upgrades.upgradeProxy(
-            proxyAddress,
-            "NFTMarketV1.sol",
-            "",
-            opts
-        );
-
-        address adminAddress = Upgrades.getAdminAddress(proxyAddress);
-        address implementationAddress = Upgrades.getImplementationAddress(proxyAddress);
-
-        console.log("Market Proxy contract deployed on %s", address(proxyAddress));
-        console.log("Market contract deployed on %s", address(implementationAddress));
-        console.log("admin contract deployed on %s", address(adminAddress));      
-    }
-```
+* ERC20, ERC721, EIP2612, EIP712
 
 
 
-5. Execute in a terminal：
+##### *Framework Usage*
 
-```shell
-forge script --rpc-url https://eth-sepolia.api.onfinality.io/public	  ./script/upgradeMarket.s.sol -s "upgradeContract()" --ffi --broadcast
-```
+* Use foundry to build, test, debug and deploy Solidity smart contracts and use its cheat codes to manipulate the state of the blockchain to simulate various scenarios
 
 
 
-6. Then you'll notice that your management address hasn't changed but the instance address has changed
+##### *Front-end Demonstration*
 
-The address of the **admin contract** is： **0xd1d32754Ef255647DCad2A97855D1AC2A0aBF773**
+* Use ether.js to link wallets, invoke contracts, and display logs. But the front-end part of the code is currently very imperfect😥
 
-The address of the **implementation contract** is : **0x2A70Cea5B15da39451fcefe9bd6f1e64046fE202**
+
+
+##### *Data Query*
+
+* Deploy sub graphs using the graph to allow developers to query contract event data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+
+[license-shield]: https://img.shields.io/github/license/othneildrew/Best-README-Template.svg?style=for-the-badge
+[license-url]: https://github.com/othneildrew/Best-README-Template/blob/master/LICENSE.txt
+
+
+

@@ -1,14 +1,3 @@
-// • 组合使用 Multicall (delegateCall) 、 默克尔树、erc20 permit 授权, 实现一个默克尔树优
-// 惠价格(100 Token)购买名单, 使用 Multicall. 调用 2 个方法:
-
-// • 合约: AirdopMerkleNFTMarket:
-
-// • permitPrePay : 完成预授权
-
-// • claimNFT( ) : 验证白名单,如果通过,直接使用 permitPrePay 的授权,转入 100
-// token, 并转出 NFT
-
-
 // SPDX-License-Identifier: GPL-3.0
 
 
